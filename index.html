@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>سپهسالار نسخه ۳.۰ - پایدار و بهینه</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Noto+Naskh+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========== استایل‌های پایه ========== */
+        :root {
+            --primary-gold: #D4AF37; --secondary-gold: #B8860B; --primary-blue: #1E3A8A;
+            --secondary-blue: #3B82F6; --primary-red: #DC2626; --secondary-red: #7F1D1D;
+            --primary-green: #059669; --secondary-green: #065F46; --dark-bg: #0F172A;
+            --medium-bg: #1E293B; --light-bg: #334155; --text-light: #F8FAFC;
+            --text-muted: #94A3B8; --border-color: #475569;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Naskh Arabic', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text-light); min-height: 100vh; line-height: 1.6;
+            overflow-x: hidden; padding-bottom: env(safe-area-inset-bottom);
+        }
+        .persian-pattern { /* ثابت */ }
+        .container { max-width: 1200px; margin: 0 auto; padding: 15px; position: relative; }
+        
+        /* نوار وضعیت (بدون Sticky) */
+        .status-bar {
+            background: rgba(30,41,59,0.95); border-radius: 12px; padding: 15px; margin-bottom: 20px;
+            border: 2px solid var(--primary-blue); backdrop-filter: blur(10px);
+            display: grid; grid-template-columns: repeat(4,1fr); gap: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .status-item { display: flex; align-items: center; gap:12px; padding:10px; background: rgba(51,65,85,0.6); border-radius: 8px; border-left: 4px solid; }
+        .status-item.gold { border-left-color: var(--primary-gold); } 
+        .status-item.troops { border-left-color: var(--primary-red); }
+        .status-item.wounded { border-left-color: var(--primary-green); } 
+        .status-item.defense { border-left-color: var(--primary-blue); }
+        .status-icon { font-size: 1.8rem; } .status-info h3 { font-size:0.9rem; color:var(--text-muted); } 
+        .status-info p { font-size:1.4rem; font-weight:bold; }
+
+        /* تب‌ها */
+        .tabs { display: flex; gap:10px; margin-bottom:20px; flex-wrap: wrap; }
+        .tab-btn { padding:12px 20px; background: rgba(30,41,59,0.9); border:2px solid var(--primary-blue); border-radius:10px; color:var(--text-light); cursor:pointer; transition:all 0.3s; font-family:'Lalezar',cursive; font-size:1.1rem; flex:1; min-width:100px; text-align:center; }
+        .tab-btn.active { background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue)); border-color: var(--primary-gold); }
+        .tab-content { display: none; animation: fadeIn 0.3s; } .tab-content.active { display: block; }
+
+        /* منوی موبایل */
+        .mobile-menu { display: none; position: fixed; bottom:0; left:0; right:0; background: var(--dark-bg); border-top:2px solid var(--primary-gold); padding:10px; z-index:1000; }
+        .mobile-tabs { display: flex; justify-content: space-around; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .mobile-tab { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size:0.8rem; cursor:pointer; padding:5px 12px; }
+        .mobile-tab.active { color: var(--primary-gold); }
+
+        /* دکمه‌ها */
+        button { font-family: inherit; font-weight:500; border:none; border-radius:10px; padding:12px 20px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:8px; font-size:1rem; width:100%; }
+        button:disabled { opacity:0.5; cursor:not-allowed; filter: grayscale(0.5); }
+        .btn-gold { background: linear-gradient(135deg, var(--primary-gold), var(--secondary-gold)); color: var(--dark-bg); font-weight:bold; }
+        .btn-blue { background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue)); color:white; }
+        .btn-red { background: linear-gradient(135deg, var(--primary-red), var(--secondary-red)); color:white; }
+        .btn-green { background: linear-gradient(135deg, var(--primary-green), var(--secondary-green)); color:white; }
+        .btn-orange { background: linear-gradient(135deg, #D97706, #92400E); color:white; }
+        button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+        /* کارت‌ها */
+        .section-card { background: rgba(30,41,59,0.9); border-radius:15px; padding:20px; margin-bottom:20px; border:2px solid; backdrop-filter:blur(5px); }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:15px; }
+        .stat-card { background: linear-gradient(135deg, rgba(51,65,85,0.8), rgba(30,41,59,0.8)); border-radius:12px; padding:15px; display:flex; align-items:center; gap:15px; border:1px solid var(--border-color); }
+        .building-card { background: linear-gradient(135deg, rgba(51,65,85,0.9), rgba(30,41,59,0.9)); border-radius:12px; padding:20px; margin-bottom:15px; border:2px solid; }
+        .mine-progress-bar { width:100%; height:25px; background: rgba(0,0,0,0.3); border-radius:15px; overflow:hidden; margin:10px 0; }
+        .mine-progress-fill { height:100%; background: linear-gradient(90deg, var(--primary-gold), #FFD700); width:0%; transition:width 0.3s; }
+        .train-unit { background: rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+        .enemy-card { background: linear-gradient(135deg, #3b1d1d, #1e293b); border:2px solid var(--primary-red); border-radius:12px; padding:20px; }
+        .battle-report { background: #2d1f0c; border:3px solid var(--primary-gold); border-radius:12px; padding:20px; margin-top:15px; display:none; }
+        .history-container { background: rgba(0,0,0,0.3); border-radius:10px; padding:15px; max-height:250px; overflow-y:auto; margin-top:15px; }
+        .history-item { padding:10px; border-bottom:1px solid #444; }
+
+        /* نوتیفیکیشن بالا وسط */
+        .notification {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100%);
+            background: linear-gradient(135deg, var(--primary-gold), var(--secondary-gold));
+            color: var(--dark-bg); padding: 15px 25px; border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); transition: transform 0.4s ease;
+            z-index: 2000; max-width: 90%; text-align: center; font-weight: bold;
+            opacity: 0; pointer-events: none;
+        }
+        .notification.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+
+        /* رسپانسیو */
+        @media (max-width: 768px) {
+            .container { padding-bottom: 85px; }
+            .tabs { display: none; }
+            .mobile-menu { display: block; }
+            .status-bar { grid-template-columns: repeat(2,1fr); }
+        }
+        @media (max-width: 480px) { .status-bar { grid-template-columns: 1fr; } }
+        .coming-soon { text-align: center; padding: 40px; font-size: 1.5rem; color: var(--primary-gold); }
+    </style>
+</head>
+<body>
+<div class="persian-pattern"></div>
+
+<!-- نوتیفیکیشن -->
+<div class="notification" id="notification"><div id="notification-text"></div></div>
+
+<div class="container">
+    <header class="game-header">
+        <div class="header-title"><h1><i class="fas fa-crown"></i> سپهسالار</h1><p class="subtitle">بازی استراتژیک ایرانی</p></div>
+        <div class="player-level"><div class="level-badge"><i class="fas fa-star"></i> سطح <span id="player-level">1</span></div></div>
+        <div class="xp-container"><div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div><div class="xp-text"><span>تجربه</span><span><span id="current-xp">0</span>/<span id="max-xp">100</span></span></div></div>
+        <button class="level-up-btn" id="level-up-btn" data-action="levelUp" style="display:none; margin-top:10px;"><i class="fas fa-arrow-up"></i> ارتقای سطح</button>
+    </header>
+
+    <!-- نوار وضعیت -->
+    <div class="status-bar">
+        <div class="status-item gold"><div class="status-icon">🪙</div><div class="status-info"><h3>طلای شما</h3><p id="status-gold">100</p></div></div>
+        <div class="status-item troops"><div class="status-icon">⚔️</div><div class="status-info"><h3>نیروهای فعال</h3><p id="status-troops">8</p></div></div>
+        <div class="status-item wounded"><div class="status-icon">🏥</div><div class="status-info"><h3>نیروهای زخمی</h3><p id="status-wounded">0</p></div></div>
+        <div class="status-item defense"><div class="status-icon">🛡️</div><div class="status-info"><h3>دفاع قلعه</h3><p id="status-defense">0%</p></div></div>
+    </div>
+
+    <!-- تب‌های دسکتاپ -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="overview"><i class="fas fa-home"></i> نمای کلی</button>
+        <button class="tab-btn" data-tab="buildings"><i class="fas fa-fort-awesome"></i> ساختمان‌ها</button>
+        <button class="tab-btn" data-tab="war"><i class="fas fa-flag"></i> میدان جنگ</button>
+        <button class="tab-btn" data-tab="missions"><i class="fas fa-tasks"></i> مأموریت‌ها</button>
+        <button class="tab-btn" data-tab="research"><i class="fas fa-flask"></i> تحقیقات</button>
+        <button class="tab-btn" data-tab="market"><i class="fas fa-coins"></i> بازار</button>
+        <button class="tab-btn" data-tab="alliance"><i class="fas fa-users"></i> اتحاد</button>
+    </div>
+
+    <!-- منوی موبایل -->
+    <div class="mobile-menu">
+        <div class="mobile-tabs" id="mobileTabsContainer"></div>
+    </div>
+
+    <!-- ================== تب نمای کلی ================== -->
+    <div class="tab-content active" id="overview-tab">
+        <section class="section-card" style="border-color: var(--primary-blue);">
+            <div class="panel-title"><i class="fas fa-flag"></i> وضعیت لشکر</div>
+            <div class="stats-grid">
+                <div class="stat-card gold"><div class="stat-icon">🪙</div><div class="stat-info"><h3>طلای شما</h3><p id="gold-amount">100</p></div></div>
+                <div class="stat-card army"><div class="stat-icon">⚔️</div><div class="stat-info"><h3>نیروها</h3><span>شمشیرزن: <span id="swordsman-count">5</span></span><span>تیرانداز: <span id="archer-count">3</span></span><span>سواره: <span id="cavalry-count">0</span></span></div></div>
+                <div class="stat-card wounded"><div class="stat-icon">🏥</div><div class="stat-info"><h3>زخمی‌ها</h3><p id="wounded-count">0</p></div></div>
+                <div class="stat-card capacity"><div class="stat-icon">🏰</div><div class="stat-info"><h3>ظرفیت</h3><p><span id="current-troops">8</span>/<span id="max-capacity">30</span></p></div></div>
+            </div>
+        </section>
+
+        <!-- فعالیت‌های سریع (حذف تحقیقات و حمله، جایگزین با رتبه‌بندی و رویداد) -->
+        <section class="section-card" style="border-color: var(--primary-gold);">
+            <div class="section-title"><i class="fas fa-bolt"></i> دسترسی سریع</div>
+            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:15px;">
+                <button class="btn-gold" data-action="collectGold"><i class="fas fa-coins"></i> دریافت طلا</button>
+                <button class="btn-green" data-action="healTroops"><i class="fas fa-heart"></i> درمان نیروها</button>
+            </div>
+        </section>
+
+        <!-- کارت‌های رتبه‌بندی و رویدادها (به زودی) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+            <div class="section-card" style="border-color: #3B82F6; text-align:center;">
+                <i class="fas fa-trophy" style="font-size:2rem; color:var(--primary-gold);"></i>
+                <h3>رتبه‌بندی</h3>
+                <p style="color: var(--text-muted); margin-top:10px;">به زودی...</p>
+            </div>
+            <div class="section-card" style="border-color: #EC4899; text-align:center;">
+                <i class="fas fa-calendar-star" style="font-size:2rem; color:var(--primary-gold);"></i>
+                <h3>رویدادها</h3>
+                <p style="color: var(--text-muted); margin-top:10px;">به زودی...</p>
+            </div>
+        </div>
+
+        <!-- مأموریت‌های روزانه -->
+        <section class="section-card" style="border-color: #D97706; margin-top:20px;">
+            <div class="section-title"><i class="fas fa-calendar-day"></i> مأموریت‌های روزانه</div>
+            <div style="display:grid; gap:15px;">
+                <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:10px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>🎯 آموزش ۵ نیرو</span>
+                        <span><span id="daily-troops-current">0</span>/5</span>
+                    </div>
+                    <div class="mission-progress"><div class="mine-progress-bar"><div class="mine-progress-fill" id="daily-troops-progress" style="background:#D97706;"></div></div></div>
+                    <button class="btn-blue" data-action="claimDailyReward" data-type="troops" id="daily-troops-claim" disabled>دریافت ۱۰ طلا</button>
+                </div>
+                <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:10px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>⚔️ انجام ۳ جنگ</span>
+                        <span><span id="daily-battles-current">0</span>/3</span>
+                    </div>
+                    <div class="mission-progress"><div class="mine-progress-bar"><div class="mine-progress-fill" id="daily-battles-progress" style="background:#D97706;"></div></div></div>
+                    <button class="btn-blue" data-action="claimDailyReward" data-type="battles" id="daily-battles-claim" disabled>دریافت ۱۵ طلا</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ================== تب ساختمان‌ها ================== -->
+    <div class="tab-content" id="buildings-tab">
+        <div class="section-card" style="border-color: var(--primary-gold);">
+            <div class="section-title"><i class="fas fa-fort-awesome"></i> ساختمان‌های امپراتوری</div>
+            
+            <!-- معدن -->
+            <div class="building-card mine-card">
+                <div style="display:flex; justify-content:space-between;"><h3>⛏️ معدن طلا</h3><span>سطح <span id="mine-level">1</span></span></div>
+                <div style="margin:10px 0;">ذخیره: <span id="current-storage">0</span>/<span id="max-storage">100</span> 🪙</div>
+                <div class="mine-progress-bar"><div class="mine-progress-fill" id="mine-fill"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span>⏳ <span id="mine-timer">۱۵ ثانیه</span></span><span>⚡ تولید: <span id="mine-production">20</span></span></div>
+                <button class="btn-gold" id="collect-btn" data-action="collectGold" disabled><i class="fas fa-coins"></i> دریافت طلا</button>
+                <button class="btn-blue" id="upgrade-mine-btn" data-action="upgradeMine" style="margin-top:8px;"><i class="fas fa-arrow-up"></i> ارتقا (<span id="mine-upgrade-cost">150</span> طلا)</button>
+            </div>
+
+            <!-- پادگان -->
+            <div class="building-card barracks-card">
+                <div style="display:flex; justify-content:space-between;"><h3>⚔️ پادگان</h3><span>سطح <span id="barracks-level">1</span> | ظرفیت: <span id="capacity-display">8/30</span></span></div>
+                <div class="training-options">
+                    <div class="train-unit"><div><span>🗡️ شمشیرزن (۲ طلا)</span></div><button class="btn-red" data-action="trainUnit" data-unit="swordsman">آموزش</button></div>
+                    <div class="train-unit"><div><span>🏹 تیرانداز (۵ طلا)</span></div><button class="btn-red" data-action="trainUnit" data-unit="archer">آموزش</button></div>
+                    <div class="train-unit"><div><span>🐎 سواره‌نظام (۱۰ طلا)</span></div><button class="btn-red" data-action="trainUnit" data-unit="cavalry">آموزش</button></div>
+                </div>
+                <button class="btn-blue" data-action="upgradeCapacity"><i class="fas fa-expand-alt"></i> افزایش ظرفیت (<span id="capacity-upgrade-cost">100</span> طلا)</button>
+                <button class="btn-blue" data-action="upgradeBarracks" style="margin-top:8px;"><i class="fas fa-arrow-up"></i> ارتقای پادگان (<span id="barracks-upgrade-cost">200</span> طلا)</button>
+            </div>
+
+            <!-- بیمارستان -->
+            <div class="building-card hospital-card">
+                <h3>🏥 درمانگاه</h3>
+                <p>نیروهای زخمی: <span id="wounded-display">0</span> نفر</p>
+                <button class="btn-green" id="heal-btn" data-action="healTroops" disabled><i class="fas fa-hand-holding-medical"></i> درمان (۱ طلا هر نفر)</button>
+            </div>
+
+            <!-- دیوار دفاعی -->
+            <div class="building-card wall-card">
+                <div style="display:flex; justify-content:space-between;"><h3>🛡️ دیوار دفاعی</h3><span>سطح <span id="wall-level">0</span></span></div>
+                <p>دفاع فعلی: <span id="defense-display">0%</span> | کاهش تلفات: <span id="wall-reduction">0%</span></p>
+                <button class="btn-orange" data-action="upgradeWall"><i class="fas fa-arrow-up"></i> ارتقا (<span id="wall-upgrade-cost">50</span> طلا)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== تب میدان جنگ ================== -->
+    <div class="tab-content" id="war-tab">
+        <div class="section-card" style="border-color: var(--primary-red);">
+            <div class="section-title"><i class="fas fa-flag"></i> میدان جنگ</div>
+            <div class="difficulty-buttons" style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="difficulty-btn btn-easy active" data-action="selectDifficulty" data-diff="easy">آسان</button>
+                <button class="difficulty-btn btn-medium" data-action="selectDifficulty" data-diff="medium">متوسط</button>
+                <button class="difficulty-btn btn-hard" data-action="selectDifficulty" data-diff="hard">سخت</button>
+            </div>
+            <button class="btn-red" id="search-btn" data-action="searchEnemies"><i class="fas fa-search"></i> جستجوی حریف</button>
+            <div style="margin:10px 0; text-align:center;">⏳ استراحت: <span id="cooldown-timer">0</span> ثانیه</div>
+            
+            <!-- بخش نمایش حریف -->
+            <div id="enemy-container" style="display:none;">
+                <div class="enemy-card">
+                    <div style="display:flex; justify-content:space-between;"><h3 id="enemy-name">...</h3><span>سطح <span id="enemy-level">1</span></span></div>
+                    <div id="enemy-difficulty" style="margin:5px 0;"></div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:5px;">
+                        <div>شمشیرزن: <span id="enemy-swordsman">0</span></div><div>تیرانداز: <span id="enemy-archer">0</span></div>
+                        <div>سواره: <span id="enemy-cavalry">0</span></div><div>غنیمت: <span id="enemy-gold">0</span></div>
+                        <div>قدرت: <span id="enemy-power">-</span></div><div>دفاع: <span id="enemy-defense">0%</span></div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button class="btn-blue" data-action="useSpy">🕵️ جاسوسی (۵)</button>
+                        <button class="btn-blue" data-action="nextEnemy">➡️ حریف بعدی</button>
+                        <button class="btn-red" data-action="attackEnemy">⚔️ حمله</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- گزارش نبرد -->
+            <div class="battle-report" id="battle-report">
+                <h3>📜 گزارش نبرد</h3>
+                <div class="report-content" id="report-content"></div>
+                <button class="btn-blue" data-action="closeReport">بستن</button>
+            </div>
+
+            <!-- تاریخچه نبردها -->
+            <button class="btn-blue" data-action="toggleHistory" style="margin:15px 0;"><i class="fas fa-history"></i> تاریخچه نبردها</button>
+            <div class="history-container" id="history-container" style="display:none;">
+                <h4>تاریخچه نبردها</h4>
+                <div id="history-list">هنوز نبردی انجام نشده.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== تب مأموریت‌ها ================== -->
+    <div class="tab-content" id="missions-tab">
+        <div class="section-card" style="border-color: #D97706;">
+            <div class="section-title"><i class="fas fa-tasks"></i> مأموریت‌های حماسی</div>
+            <div class="coming-soon"><i class="fas fa-hourglass-half"></i> به زودی...</div>
+        </div>
+    </div>
+
+    <!-- ================== تب تحقیقات (غیرفعال) ================== -->
+    <div class="tab-content" id="research-tab">
+        <div class="section-card" style="border-color: var(--primary-purple);">
+            <div class="section-title"><i class="fas fa-flask"></i> مرکز تحقیقات</div>
+            <div class="coming-soon"><i class="fas fa-hourglass-half"></i> به زودی...</div>
+        </div>
+    </div>
+
+    <!-- ================== تب بازار (غیرفعال) ================== -->
+    <div class="tab-content" id="market-tab">
+        <div class="section-card" style="border-color: var(--primary-gold);">
+            <div class="section-title"><i class="fas fa-coins"></i> بازار</div>
+            <div class="coming-soon"><i class="fas fa-hourglass-half"></i> به زودی...</div>
+        </div>
+    </div>
+
+    <!-- ================== تب اتحاد (غیرفعال) ================== -->
+    <div class="tab-content" id="alliance-tab">
+        <div class="section-card" style="border-color: var(--secondary-green);">
+            <div class="section-title"><i class="fas fa-users"></i> اتحاد</div>
+            <div class="coming-soon"><i class="fas fa-hourglass-half"></i> به زودی...</div>
+        </div>
+    </div>
+
+    <footer style="margin-top:20px; text-align:center; padding:15px; border-top:1px solid #444;">
+        <p>سپهسالار نسخه ۳.۰ | 
+        <button data-action="resetGame" style="display:inline-block; width:auto; padding:8px 20px; background:var(--primary-red);">بازنشانی</button>
+        </p>
+    </footer>
+</div>
+
+<script>
+    (function(){
+        // ===================== کلاس‌های بازی (نسخه ۳.۰ - کاملاً بهینه) =====================
+        class GameState {
+            constructor() {
+                this.default = {
+                    level:1, experience:0, maxExperience:100, gold:100, swordsman:5, archer:3, cavalry:0, wounded:0,
+                    maxCapacity:30, mineLevel:1, mineProduction:20, mineUpgradeCost:150, mineTime:15,
+                    mineFill:0, currentStorage:0, maxStorage:100, barracksLevel:1, barracksUpgradeCost:200,
+                    capacityUpgradeCost:100, wallLevel:0, wallUpgradeCost:50, defenseBonus:0,
+                    battleCount:0, victories:0, searchCooldown:0, currentEnemies:[], currentEnemyIndex:0,
+                    selectedDifficulty:'easy', battleHistory:[], daily:{troopsTrained:0, troopsRewardClaimed:false, battlesFought:0, battlesRewardClaimed:false}
+                };
+                Object.assign(this, JSON.parse(JSON.stringify(this.default)));
+                this._mineBaseTime = performance.now();
+                this._mineElapsedOffset = 0;
+                this.load();
+            }
+            load() {
+                const saved = localStorage.getItem('sepahsalar_v3');
+                if(saved) try { Object.assign(this, JSON.parse(saved)); } catch(e){}
+                this._mineElapsedOffset = this._mineElapsedOffset || 0;
+                this._mineBaseTime = performance.now();
+            }
+            save() {
+                this._mineElapsedOffset = ((this.mineFill/100)*this.mineTime) + (performance.now()-this._mineBaseTime)/1000;
+                localStorage.setItem('sepahsalar_v3', JSON.stringify(this));
+            }
+            reset() {
+                Object.assign(this, JSON.parse(JSON.stringify(this.default)));
+                this._mineBaseTime = performance.now(); this._mineElapsedOffset = 0;
+                localStorage.removeItem('sepahsalar_v3');
+            }
+            updateMineProgress() {
+                const elapsed = ((performance.now() - this._mineBaseTime)/1000) + this._mineElapsedOffset;
+                const cycles = Math.floor(elapsed / this.mineTime);
+                const remainder = elapsed % this.mineTime;
+                let produced = cycles * this.mineProduction;
+                this.currentStorage = Math.min(this.maxStorage, this.currentStorage + produced);
+                this.mineFill = Math.min(100, (remainder / this.mineTime) * 100);
+                this._mineBaseTime = performance.now() - (remainder * 1000);
+                this._mineElapsedOffset = 0;
+                return { fill: this.mineFill, storage: this.currentStorage };
+            }
+        }
+
+        class UIManager {
+            constructor(state) { this.state = state; }
+            refresh() {
+                // منابع
+                document.getElementById('gold-amount').textContent = document.getElementById('status-gold').textContent = this.state.gold;
+                // نیروها
+                document.getElementById('swordsman-count').textContent = this.state.swordsman;
+                document.getElementById('archer-count').textContent = this.state.archer;
+                document.getElementById('cavalry-count').textContent = this.state.cavalry;
+                document.getElementById('wounded-count').textContent = document.getElementById('wounded-display').textContent = this.state.wounded;
+                const active = this.state.swordsman + this.state.archer + this.state.cavalry;
+                document.getElementById('status-troops').textContent = active;
+                document.getElementById('status-wounded').textContent = this.state.wounded;
+                const total = active + this.state.wounded;
+                document.getElementById('current-troops').textContent = total;
+                document.getElementById('max-capacity').textContent = this.state.maxCapacity;
+                document.getElementById('capacity-display').textContent = `${total}/${this.state.maxCapacity}`;
+                // تجربه
+                const xpPercent = (this.state.experience / this.state.maxExperience) * 100;
+                document.getElementById('xp-fill').style.width = xpPercent + '%';
+                document.getElementById('current-xp').textContent = this.state.experience;
+                document.getElementById('max-xp').textContent = this.state.maxExperience;
+                document.getElementById('player-level').textContent = this.state.level;
+                document.getElementById('level-up-btn').style.display = this.state.experience >= this.state.maxExperience ? 'block' : 'none';
+                // دفاع
+                document.getElementById('status-defense').textContent = `${this.state.defenseBonus}%`;
+                document.getElementById('defense-display').textContent = `${this.state.defenseBonus}%`;
+                document.getElementById('wall-reduction').textContent = `${Math.min(50, this.state.wallLevel * 5)}%`;
+                document.getElementById('wall-level').textContent = this.state.wallLevel;
+                // معدن
+                const mine = this.state.updateMineProgress();
+                document.getElementById('mine-fill').style.width = mine.fill + '%';
+                document.getElementById('mine-timer').textContent = mine.fill < 100 ? Math.ceil(((100-mine.fill)/100)*this.state.mineTime) + ' ثانیه' : 'آماده';
+                document.getElementById('current-storage').textContent = mine.storage;
+                document.getElementById('max-storage').textContent = this.state.maxStorage;
+                document.getElementById('mine-level').textContent = this.state.mineLevel;
+                document.getElementById('mine-production').textContent = this.state.mineProduction;
+                document.getElementById('mine-upgrade-cost').textContent = this.state.mineUpgradeCost;
+                document.getElementById('collect-btn').disabled = mine.storage === 0;
+                // پادگان
+                document.getElementById('barracks-level').textContent = this.state.barracksLevel;
+                document.getElementById('capacity-upgrade-cost').textContent = this.state.capacityUpgradeCost;
+                document.getElementById('barracks-upgrade-cost').textContent = this.state.barracksUpgradeCost;
+                // دیوار
+                document.getElementById('wall-upgrade-cost').textContent = this.state.wallUpgradeCost;
+                // دکمه‌ها
+                document.getElementById('heal-btn').disabled = this.state.wounded === 0 || this.state.gold < this.state.wounded;
+                document.getElementById('upgrade-mine-btn').disabled = this.state.gold < this.state.mineUpgradeCost;
+                document.getElementById('upgrade-capacity-btn').disabled = this.state.gold < this.state.capacityUpgradeCost;
+                document.getElementById('upgrade-barracks-btn').disabled = this.state.gold < this.state.barracksUpgradeCost;
+                document.getElementById('upgrade-wall-btn').disabled = this.state.gold < this.state.wallUpgradeCost;
+                // ماموریت روزانه
+                document.getElementById('daily-troops-current').textContent = this.state.daily.troopsTrained;
+                document.getElementById('daily-battles-current').textContent = this.state.daily.battlesFought;
+                document.getElementById('daily-troops-progress').style.width = Math.min(100, (this.state.daily.troopsTrained/5)*100) + '%';
+                document.getElementById('daily-battles-progress').style.width = Math.min(100, (this.state.daily.battlesFought/3)*100) + '%';
+                document.getElementById('daily-troops-claim').disabled = this.state.daily.troopsTrained<5 || this.state.daily.troopsRewardClaimed;
+                document.getElementById('daily-battles-claim').disabled = this.state.daily.battlesFought<3 || this.state.daily.battlesRewardClaimed;
+                // کولداون
+                document.getElementById('cooldown-timer').textContent = this.state.searchCooldown;
+                document.getElementById('search-btn').disabled = this.state.searchCooldown > 0;
+            }
+            updateHistory() {
+                const list = document.getElementById('history-list');
+                if (this.state.battleHistory.length === 0) { list.innerHTML = 'هنوز نبردی انجام نشده.'; return; }
+                list.innerHTML = this.state.battleHistory.map(r => `
+                    <div class="history-item" style="border-right:4px solid ${r.isVictory?'#059669':'#DC2626'}">
+                        <small>${r.timestamp}</small><br>
+                        ${r.isVictory?'🏆 پیروزی':'💀 شکست'} مقابل ${r.enemyName} (سطح ${r.enemyLevel})<br>
+                        ${r.isVictory?`غنیمت: ${r.loot} طلا | `:''}زخمی: ${r.wounded} | XP: ${r.xp}
+                    </div>
+                `).join('');
+            }
+        }
+
+        class BattleEngine {
+            constructor(state) { this.state = state; }
+            simulate(enemy) {
+                const pPower = this.calcPower(this.state);
+                const ePower = this.calcPower(enemy);
+                const luck = 0.9 + Math.random()*0.2;
+                const isVictory = (pPower * (1+this.state.defenseBonus/100)) * luck > (ePower * (1+enemy.defense/100));
+                let wounded = 0, loot = 0, xp = 0;
+                if(isVictory) {
+                    wounded = Math.max(1, Math.floor((this.state.swordsman+this.state.archer+this.state.cavalry)*0.1));
+                    loot = enemy.gold; xp = enemy.level * 15;
+                    this.state.gold += loot; this.state.experience = Math.min(this.state.maxExperience, this.state.experience + xp);
+                    this.state.victories++; this.state.daily.battlesFought++;
+                } else {
+                    wounded = Math.max(1, Math.floor((this.state.swordsman+this.state.archer+this.state.cavalry)*0.3));
+                    xp = enemy.level * 5; this.state.experience = Math.min(this.state.maxExperience, this.state.experience + xp);
+                    this.state.daily.battlesFought++;
+                }
+                // اعمال تلفات
+                const total = this.state.swordsman + this.state.archer + this.state.cavalry;
+                if(total > 0) {
+                    const s = Math.floor(wounded * (this.state.swordsman/total));
+                    const a = Math.floor(wounded * (this.state.archer/total));
+                    const c = wounded - s - a;
+                    this.state.swordsman = Math.max(0, this.state.swordsman - s);
+                    this.state.archer = Math.max(0, this.state.archer - a);
+                    this.state.cavalry = Math.max(0, this.state.cavalry - c);
+                    this.state.wounded += wounded;
+                }
+                const record = { timestamp: new Date().toLocaleString('fa-IR'), enemyName: enemy.name, enemyLevel: enemy.level, isVictory, loot, xp, wounded };
+                this.state.battleHistory.unshift(record);
+                if(this.state.battleHistory.length > 10) this.state.battleHistory.pop();
+                return { isVictory, loot, xp, wounded, report: isVictory?`🏆 پیروزی! غنیمت: ${loot} طلا`:`💔 شکست... ${xp} XP` };
+            }
+            calcPower(source) {
+                let p = source.swordsman*10 + source.archer*25 + source.cavalry*40;
+                return Math.max(1, p);
+            }
+        }
+
+        class GameController {
+            constructor() {
+                this.state = new GameState();
+                this.ui = new UIManager(this.state);
+                this.battle = new BattleEngine(this.state);
+                this.persianNames = ["آرش","رستم","اسفندیار","سهراب","گردآفرید","بیژن","تهمینه","گودرز","گیو","فرامرز"];
+                this.init();
+            }
+            init() {
+                this.setupTabs(); this.setupMobileMenu(); this.setupClickListener();
+                setInterval(() => { this.state.updateMineProgress(); this.ui.refresh(); this.state.save(); }, 500);
+                setInterval(() => { if(this.state.searchCooldown>0) { this.state.searchCooldown--; this.ui.refresh(); } }, 1000);
+                this.ui.refresh(); this.showNotification('سپهسالار ۳.۰ - پایدار و سریع');
+            }
+            setupClickListener() {
+                document.body.addEventListener('click', (e) => {
+                    const btn = e.target.closest('[data-action]');
+                    if (!btn) return;
+                    const action = btn.dataset.action;
+                    if (action && typeof this[action] === 'function') this[action](btn.dataset);
+                    else if (btn.dataset.tab) this.switchTab(btn.dataset.tab);
+                });
+            }
+            setupTabs() {
+                document.querySelectorAll('.tab-btn, .mobile-tab').forEach(b => b.addEventListener('click', () => this.switchTab(b.dataset.tab)));
+            }
+            setupMobileMenu() {
+                const container = document.getElementById('mobileTabsContainer');
+                const tabs = ['overview','buildings','war','missions'];
+                const names = {overview:'خانه',buildings:'ساختمان',war:'جنگ',missions:'ماموریت'};
+                container.innerHTML = tabs.map(t => `<div class="mobile-tab" data-tab="${t}"><i class="fas fa-${t==='overview'?'home':t==='buildings'?'fort-awesome':t==='war'?'flag':'tasks'}"></i><span>${names[t]}</span></div>`).join('');
+            }
+            switchTab(tabId) {
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.tab-btn, .mobile-tab').forEach(b => b.classList.remove('active'));
+                document.getElementById(`${tabId}-tab`)?.classList.add('active');
+                document.querySelectorAll(`[data-tab="${tabId}"]`).forEach(b => b.classList.add('active'));
+                if (tabId === 'war' && this.state.currentEnemies.length === 0) this.searchEnemies();
+            }
+            // ---------- متدهای بازی ----------
+            collectGold() {
+                if(this.state.currentStorage > 0) {
+                    const c = this.state.currentStorage;
+                    this.state.gold += c; this.state.currentStorage = 0; this.state.mineFill = 0;
+                    this.state._mineBaseTime = performance.now(); this.state._mineElapsedOffset = 0;
+                    this.ui.refresh(); this.state.save();
+                    this.showNotification(`🪙 ${c} طلا دریافت شد`);
+                }
+            }
+            trainUnit(p) {
+                const costs = {swordsman:2, archer:5, cavalry:10};
+                const unit = p.unit;
+                if(this.state.gold < costs[unit]) return this.showNotification('طلا کافی نیست');
+                if((this.state.swordsman+this.state.archer+this.state.cavalry+this.state.wounded) >= this.state.maxCapacity) return this.showNotification('ظرفیت تکمیل');
+                this.state.gold -= costs[unit]; this.state[unit]++; this.state.daily.troopsTrained++;
+                this.ui.refresh(); this.state.save();
+                this.showNotification(`✅ یک ${unit} آموزش دید`);
+            }
+            upgradeMine() {
+                if(this.state.gold >= this.state.mineUpgradeCost) {
+                    this.state.gold -= this.state.mineUpgradeCost; this.state.mineLevel++;
+                    this.state.mineTime = Math.floor(this.state.mineTime * 1.05);
+                    this.state.mineProduction = Math.floor(this.state.mineProduction * 1.5);
+                    this.state.maxStorage = Math.floor(this.state.maxStorage * 1.5);
+                    this.state.mineUpgradeCost = Math.floor(this.state.mineUpgradeCost * 2);
+                    this.state._mineBaseTime = performance.now(); this.state._mineElapsedOffset = 0;
+                    this.ui.refresh(); this.state.save();
+                }
+            }
+            healTroops() {
+                if(this.state.wounded > 0 && this.state.gold >= this.state.wounded) {
+                    this.state.gold -= this.state.wounded; this.state.swordsman += this.state.wounded; this.state.wounded = 0;
+                    this.ui.refresh(); this.state.save();
+                }
+            }
+            upgradeCapacity() {
+                if(this.state.gold >= this.state.capacityUpgradeCost) {
+                    this.state.gold -= this.state.capacityUpgradeCost; this.state.maxCapacity += 10;
+                    this.state.capacityUpgradeCost = Math.floor(this.state.capacityUpgradeCost * 1.5);
+                    this.ui.refresh(); this.state.save();
+                }
+            }
+            upgradeBarracks() {
+                if(this.state.gold >= this.state.barracksUpgradeCost) {
+                    this.state.gold -= this.state.barracksUpgradeCost; this.state.barracksLevel++;
+                    this.state.barracksUpgradeCost = Math.floor(this.state.barracksUpgradeCost * 2);
+                    this.ui.refresh(); this.state.save();
+                }
+            }
+            upgradeWall() {
+                if(this.state.gold >= this.state.wallUpgradeCost) {
+                    this.state.gold -= this.state.wallUpgradeCost; this.state.wallLevel++;
+                    this.state.defenseBonus = Math.min(50, this.state.wallLevel * 5);
+                    this.state.wallUpgradeCost = Math.floor(this.state.wallUpgradeCost * 1.5);
+                    this.ui.refresh(); this.state.save();
+                }
+            }
+            levelUp() {
+                if(this.state.experience >= this.state.maxExperience) {
+                    this.state.level++; this.state.experience = 0; this.state.maxExperience = Math.floor(this.state.maxExperience * 1.5);
+                    this.state.maxCapacity += 10; this.state.gold += 100 * this.state.level;
+                    this.ui.refresh(); this.state.save();
+                }
+            }
+            claimDailyReward(p) {
+                if(p.type==='troops' && this.state.daily.troopsTrained>=5 && !this.state.daily.troopsRewardClaimed) {
+                    this.state.daily.troopsRewardClaimed = true; this.state.gold += 10; this.ui.refresh(); this.state.save();
+                } else if(p.type==='battles' && this.state.daily.battlesFought>=3 && !this.state.daily.battlesRewardClaimed) {
+                    this.state.daily.battlesRewardClaimed = true; this.state.gold += 15; this.ui.refresh(); this.state.save();
+                }
+            }
+            searchEnemies() {
+                if(this.state.searchCooldown > 0) return;
+                this.state.currentEnemies = [];
+                for(let i=0; i<3; i++) {
+                    const diff = this.state.selectedDifficulty;
+                    const lvl = diff==='easy'? Math.max(1,this.state.level-1) : diff==='medium'? this.state.level : this.state.level+1;
+                    const mult = {easy:0.6, medium:1.0, hard:1.5}[diff];
+                    this.state.currentEnemies.push({
+                        name: this.persianNames[Math.floor(Math.random()*this.persianNames.length)],
+                        level: lvl, swordsman: Math.max(1, Math.floor(this.state.swordsman*mult*0.5)),
+                        archer: Math.max(0, Math.floor(this.state.archer*mult*0.3)),
+                        cavalry: Math.max(0, Math.floor(this.state.cavalry*mult*0.2)),
+                        gold: Math.floor(lvl*30*mult), defense: Math.floor(Math.random()*30), difficulty: diff
+                    });
+                }
+                this.state.currentEnemyIndex = 0; this.showEnemy(); this.showNotification('۳ حریف یافت شد');
+            }
+            showEnemy() {
+                const e = this.state.currentEnemies[this.state.currentEnemyIndex];
+                if(!e) return;
+                document.getElementById('enemy-name').textContent = e.name;
+                document.getElementById('enemy-level').textContent = e.level;
+                document.getElementById('enemy-swordsman').textContent = e.swordsman;
+                document.getElementById('enemy-archer').textContent = e.archer;
+                document.getElementById('enemy-cavalry').textContent = e.cavalry;
+                document.getElementById('enemy-gold').textContent = e.gold;
+                document.getElementById('enemy-defense').textContent = e.defense + '%';
+                document.getElementById('enemy-difficulty').textContent = `سطح: ${e.difficulty}`;
+                document.getElementById('enemy-container').style.display = 'block';
+            }
+            attackEnemy() {
+                const e = this.state.currentEnemies[this.state.currentEnemyIndex];
+                const res = this.battle.simulate(e);
+                document.getElementById('enemy-container').style.display = 'none';
+                document.getElementById('battle-report').style.display = 'block';
+                document.getElementById('report-content').innerHTML = res.report;
+                this.state.searchCooldown = 5;
+                this.ui.refresh(); this.ui.updateHistory(); this.state.save();
+            }
+            nextEnemy() {
+                if(this.state.currentEnemies.length) {
+                    this.state.currentEnemyIndex = (this.state.currentEnemyIndex + 1) % this.state.currentEnemies.length;
+                    this.showEnemy();
+                }
+            }
+            useSpy() { if(this.state.gold>=5) { this.state.gold-=5; this.showNotification('جاسوسی انجام شد'); this.ui.refresh(); this.state.save(); } }
+            closeReport() { document.getElementById('battle-report').style.display = 'none'; }
+            selectDifficulty(p) {
+                this.state.selectedDifficulty = p.diff;
+                document.querySelectorAll('.difficulty-btn').forEach(b=>b.classList.remove('active'));
+                document.querySelector(`.btn-${p.diff}`).classList.add('active');
+            }
+            toggleHistory() {
+                const h = document.getElementById('history-container');
+                h.style.display = h.style.display === 'none' ? 'block' : 'none';
+                if(h.style.display === 'block') this.ui.updateHistory();
+            }
+            resetGame() { if(confirm('بازنشانی؟')) { this.state.reset(); this.ui.refresh(); this.ui.updateHistory(); } }
+            showNotification(msg) {
+                const n = document.getElementById('notification');
+                document.getElementById('notification-text').textContent = msg;
+                n.classList.add('show');
+                setTimeout(() => n.classList.remove('show'), 2500);
+            }
+        }
+
+        window.gameController = new GameController();
+    })();
+</script>
+</body>
+</html>
